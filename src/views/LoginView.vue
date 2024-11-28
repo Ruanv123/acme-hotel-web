@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoginForm from '@/components/forms/LoginForm.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +15,7 @@ import { Label } from '@/components/ui/label'
             Enter your email below to login to your account
           </p>
         </div>
-        <div class="grid gap-4">
+        <!-- <div class="grid gap-4">
           <div class="grid gap-2">
             <Label for="email">Email</Label>
             <Input id="email" type="email" placeholder="m@example.com" required />
@@ -30,7 +31,8 @@ import { Label } from '@/components/ui/label'
           </div>
           <Button type="submit" class="w-full"> Login </Button>
           <Button variant="outline" class="w-full"> Login with Google </Button>
-        </div>
+        </div> -->
+        <LoginForm />
         <div class="mt-4 text-center text-sm">
           Don't have an account?
           <a href="#" class="underline"> Sign up </a>

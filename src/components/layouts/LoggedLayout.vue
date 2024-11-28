@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge'
+import { Badge } from "@/components/ui/badge"
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +10,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
   BedDoubleIcon,
   BedSingle,
@@ -31,46 +31,54 @@ import {
   ShoppingCart,
   Users,
   Users2,
-} from 'lucide-vue-next'
-import { RouterLink, RouterView } from 'vue-router'
+} from "lucide-vue-next"
+import { RouterLink, RouterView, useRouter } from "vue-router"
+import { logout } from "@/api/auth"
 
 const links = [
   {
-    path: '/',
-    label: 'Home',
+    path: "/",
+    label: "Home",
     icon: Home,
   },
   {
-    path: '/quartos',
-    label: 'Quartos',
+    path: "/quartos",
+    label: "Quartos",
     icon: BedSingle,
   },
   {
-    path: '/reservas',
-    label: 'Reservas',
+    path: "/reservas",
+    label: "Reservas",
     icon: CalendarIcon,
   },
   {
-    path: '/hospedes',
-    label: 'Hospedes',
+    path: "/hospedes",
+    label: "Hospedes",
     icon: Users2,
   },
   {
-    path: '/pagamentos',
-    label: 'Pagamentos',
+    path: "/pagamentos",
+    label: "Pagamentos",
     icon: CreditCardIcon,
   },
   {
-    path: '/relatorios',
-    label: 'Relatórios',
+    path: "/relatorios",
+    label: "Relatórios",
     icon: ChartColumnIcon,
   },
   {
-    path: '/settings',
-    label: 'Configurações',
+    path: "/settings",
+    label: "Configurações",
     icon: Settings,
   },
 ]
+
+const router = useRouter()
+
+function handleLogout() {
+  logout()
+  router.push("/login")
+}
 </script>
 
 <template>
@@ -214,7 +222,7 @@ const links = [
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Support</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem @click="handleLogout">Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
