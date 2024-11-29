@@ -14,9 +14,8 @@ import { z } from "zod"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { RouterLink, useRouter } from "vue-router"
-import { login } from "@/api/auth"
 
-const router = useRouter()
+// const router = useRouter()
 
 const loginFormSchema = toTypedSchema(
   z.object({
