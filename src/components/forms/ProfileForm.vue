@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { CalendarDate, DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
-import { toTypedSchema } from '@vee-validate/zod'
-import { h, ref } from 'vue'
-import { toast } from 'vue-sonner'
-import { z } from 'zod'
-import { Separator } from '../ui/separator'
+import { cn } from "@/lib/utils"
+import { Cross1Icon } from "@radix-icons/vue"
+import { toTypedSchema } from "@vee-validate/zod"
+import { FieldArray, useForm } from "vee-validate"
+import { h, ref } from "vue"
+import { toast } from "vue-sonner"
+import * as z from "zod"
+import { Separator } from "../ui/separator"
 import {
   FormControl,
   FormDescription,
@@ -12,216 +14,165 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form'
-import { Input } from '../ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { Button } from '../ui/button'
-import { cn } from '@/lib/utils'
-import { Calendar, Check, ChevronsUpDown } from 'lucide-vue-next'
-import { toDate } from 'radix-vue/date'
+} from "../ui/form"
+import { Input } from "../ui/input"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '../ui/command'
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select"
+import { Textarea } from "../ui/textarea"
+import { Button } from "../ui/button"
 
-const open = ref(false)
-const dateValue = ref()
-const placeholder = ref()
+const verifiedEmails = ref(["m@example.com", "m@google.com", "m@support.com"])
 
-const languages = [
-  { label: 'English', value: 'en' },
-  { label: 'French', value: 'fr' },
-  { label: 'German', value: 'de' },
-  { label: 'Spanish', value: 'es' },
-  { label: 'Portuguese', value: 'pt' },
-  { label: 'Russian', value: 'ru' },
-  { label: 'Japanese', value: 'ja' },
-  { label: 'Korean', value: 'ko' },
-  { label: 'Chinese', value: 'zh' },
-] as const
-
-const df = new DateFormatter('en-US', {
-  dateStyle: 'long',
-})
-
-const accountFormSchema = toTypedSchema(
+const profileFormSchema = toTypedSchema(
   z.object({
-    name: z
-      .string({
-        required_error: 'Required.',
-      })
+    username: z
+      .string()
       .min(2, {
-        message: 'Name must be at least 2 characters.',
+        message: "Username must be at least 2 characters.",
       })
       .max(30, {
-        message: 'Name must not be longer than 30 characters.',
+        message: "Username must not be longer than 30 characters.",
       }),
-    dob: z
+    email: z
+      .string({
+        required_error: "Please select an email to display.",
+      })
+      .email(),
+    bio: z
       .string()
-      .datetime()
-      .optional()
-      .refine((date) => date !== undefined, 'Please select a valid date.'),
-    language: z.string().min(1, 'Please select a language.'),
+      .max(160, { message: "Bio must not be longer than 160 characters." })
+      .min(4, { message: "Bio must be at least 2 characters." }),
+    urls: z
+      .array(
+        z.object({
+          value: z.string().url({ message: "Please enter a valid URL." }),
+        }),
+      )
+      .optional(),
   }),
 )
 
-// https://github.com/logaretm/vee-validate/issues/3521
-// https://github.com/logaretm/vee-validate/discussions/3571
-async function onSubmit(values: any) {
-  toast({
-    title: 'You submitted the following values:',
-    description: h(
-      'pre',
-      { class: 'mt-2 w-[340px] rounded-md bg-slate-950 p-4' },
-      h('code', { class: 'text-white' }, JSON.stringify(values, null, 2)),
-    ),
-  })
-}
+const { handleSubmit, resetForm } = useForm({
+  validationSchema: profileFormSchema,
+  initialValues: {
+    bio: "I own a computer.",
+    urls: [{ value: "https://shadcn.com" }, { value: "http://twitter.com/shadcn" }],
+  },
+})
+
+const onSubmit = handleSubmit((values) => {
+  console.log(values)
+  toast.success("You submitted the following values:")
+})
 </script>
 
 <template>
   <div>
-    <h3 class="text-lg font-medium">Account</h3>
-    <p class="text-sm text-muted-foreground">
-      Update your account settings. Set your preferred language and timezone.
-    </p>
+    <h3 class="text-lg font-medium">Profile</h3>
+    <p class="text-sm text-muted-foreground">This is how others will see you on the site.</p>
   </div>
   <Separator />
-  <Form
-    v-slot="{ setFieldValue }"
-    :validation-schema="accountFormSchema"
-    class="space-y-8"
-    @submit="onSubmit"
-  >
-    <FormField v-slot="{ componentField }" name="name">
+  <form class="space-y-8" @submit="onSubmit">
+    <FormField v-slot="{ componentField }" name="username">
       <FormItem>
-        <FormLabel>Name</FormLabel>
+        <FormLabel>Username</FormLabel>
         <FormControl>
-          <Input type="text" placeholder="Your name" v-bind="componentField" />
+          <Input type="text" placeholder="shadcn" v-bind="componentField" />
         </FormControl>
         <FormDescription>
-          This is the name that will be displayed on your profile and in emails.
+          This is your public display name. It can be your real name or a pseudonym. You can only
+          change this once every 30 days.
         </FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
 
-    <FormField v-slot="{ field, value }" name="dob">
-      <FormItem class="flex flex-col">
-        <FormLabel>Date of birth</FormLabel>
-        <Popover>
-          <PopoverTrigger as-child>
-            <FormControl>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[240px] justify-start text-left font-normal',
-                    !value && 'text-muted-foreground',
-                  )
-                "
-              >
-                <Calendar class="mr-2 h-4 w-4 opacity-50" />
-                <span>{{
-                  value ? df.format(toDate(dateValue, getLocalTimeZone())) : 'Pick a date'
-                }}</span>
-              </Button>
-            </FormControl>
-          </PopoverTrigger>
-          <PopoverContent class="p-0">
-            <Calendar
-              v-model:placeholder="placeholder"
-              v-model="dateValue"
-              calendar-label="Date of birth"
-              initial-focus
-              :min-value="new CalendarDate(1900, 1, 1)"
-              :max-value="today(getLocalTimeZone())"
-              @update:model-value="
-                (v) => {
-                  if (v) {
-                    dateValue = v
-                    setFieldValue('dob', toDate(v).toISOString())
-                  } else {
-                    dateValue = undefined
-                    setFieldValue('dob', undefined)
-                  }
-                }
-              "
-            />
-          </PopoverContent>
-        </Popover>
-        <FormDescription> Your date of birth is used to calculate your age. </FormDescription>
-        <FormMessage />
-      </FormItem>
-      <input type="hidden" v-bind="field" />
-    </FormField>
+    <FormField v-slot="{ componentField }" name="email">
+      <FormItem>
+        <FormLabel>Email</FormLabel>
 
-    <FormField v-slot="{ value }" name="language">
-      <FormItem class="flex flex-col">
-        <FormLabel>Language</FormLabel>
-
-        <Popover v-model:open="open">
-          <PopoverTrigger as-child>
-            <FormControl>
-              <Button
-                variant="outline"
-                role="combobox"
-                :aria-expanded="open"
-                :class="cn('w-[200px] justify-between', !value && 'text-muted-foreground')"
-              >
-                {{
-                  value
-                    ? languages.find((language) => language.value === value)?.label
-                    : 'Select language...'
-                }}
-
-                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </FormControl>
-          </PopoverTrigger>
-          <PopoverContent class="w-[200px] p-0">
-            <Command>
-              <CommandInput placeholder="Search language..." />
-              <CommandEmpty>No language found.</CommandEmpty>
-              <CommandList>
-                <CommandGroup>
-                  <CommandItem
-                    v-for="language in languages"
-                    :key="language.value"
-                    :value="language.label"
-                    @select="
-                      () => {
-                        setFieldValue('language', language.value)
-                        open = false
-                      }
-                    "
-                  >
-                    <Check
-                      :class="
-                        cn('mr-2 h-4 w-4', value === language.value ? 'opacity-100' : 'opacity-0')
-                      "
-                    />
-                    {{ language.label }}
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
+        <Select v-bind="componentField">
+          <FormControl>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an email" />
+            </SelectTrigger>
+          </FormControl>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem v-for="email in verifiedEmails" :key="email" :value="email">
+                {{ email }}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <FormDescription>
-          This is the language that will be used in the dashboard.
+          You can manage verified email addresses in your email settings.
         </FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
 
-    <div class="flex justify-start">
-      <Button type="submit"> Update account </Button>
+    <FormField v-slot="{ componentField }" name="bio">
+      <FormItem>
+        <FormLabel>Bio</FormLabel>
+        <FormControl>
+          <Textarea placeholder="Tell us a little bit about yourself" v-bind="componentField" />
+        </FormControl>
+        <FormDescription>
+          You can <span>@mention</span> other users and organizations to link to them.
+        </FormDescription>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <div>
+      <FieldArray v-slot="{ fields, push, remove }" name="urls">
+        <div v-for="(field, index) in fields" :key="`urls-${field.key}`">
+          <FormField v-slot="{ componentField }" :name="`urls[${index}].value`">
+            <FormItem>
+              <FormLabel :class="cn(index !== 0 && 'sr-only')"> URLs </FormLabel>
+              <FormDescription :class="cn(index !== 0 && 'sr-only')">
+                Add links to your website, blog, or social media profiles.
+              </FormDescription>
+              <div class="relative flex items-center">
+                <FormControl>
+                  <Input type="url" v-bind="componentField" />
+                </FormControl>
+                <button
+                  type="button"
+                  class="absolute py-2 pe-3 end-0 text-muted-foreground"
+                  @click="remove(index)"
+                >
+                  <Cross1Icon class="w-3" />
+                </button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="text-xs w-20 mt-2"
+          @click="push({ value: '' })"
+        >
+          Add URL
+        </Button>
+      </FieldArray>
     </div>
-  </Form>
+
+    <div class="flex gap-2 justify-start">
+      <Button type="submit"> Update profile </Button>
+
+      <Button type="button" variant="outline" @click="resetForm"> Reset form </Button>
+    </div>
+  </form>
 </template>

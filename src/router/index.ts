@@ -1,4 +1,5 @@
 import LoggedLayout from "@/components/layouts/LoggedLayout.vue"
+import SettingsLayout from "@/components/layouts/SettingsLayout.vue"
 import NotFoundView from "@/views/NotFoundView.vue"
 import { createRouter, createWebHistory } from "vue-router"
 
@@ -69,8 +70,14 @@ const router = createRouter({
         },
         {
           path: "settings",
-          name: "settings",
-          component: () => import("../views/ConfiguracoesView.vue"),
+          component: () => import("../components/layouts/SettingsLayout.vue"),
+          children: [
+            {
+              path: "",
+              name: "settings",
+              component: () => import("../views/ConfiguracoesView.vue"),
+            },
+          ],
         },
         {
           path: "/:pathMatch(.*)*",

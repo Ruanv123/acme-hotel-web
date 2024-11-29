@@ -18,47 +18,45 @@ import { login } from "@/api/auth"
 
 const router = useRouter()
 
-const zodSchema = z.object({
-  email: z
-    .string({
-      required_error: "Required.",
-    })
-    .email({
-      message: "Invalid email address.",
-    }),
-  password: z
-    .string({
-      required_error: "Required.",
-    })
-    .min(6, {
-      message: "Password must be at least 6 characters.",
-    }),
-})
+const loginFormSchema = toTypedSchema(
+  z.object({
+    email: z
+      .string({
+        required_error: "Required.",
+      })
+      .email({
+        message: "Invalid email address.",
+      }),
+    password: z
+      .string({
+        required_error: "Required.",
+      })
+      .min(6, {
+        message: "Password must be at least 6 characters.",
+      }),
+  }),
+)
 
-const loginFormSchema = toTypedSchema(zodSchema)
-
-const form = useForm({
+const { handleSubmit, resetForm } = useForm({
   validationSchema: loginFormSchema,
+  initialValues: {
+    email: "",
+    password: "",
+  },
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function onSubmit(values: any) {
+const onSubmit = handleSubmit(async (values) => {
   try {
-    await login({
-      email: values.email,
-      password: values.password,
-    })
-    toast.success("Login successful")
-    router.push("/")
+    console.log(values)
   } catch (error) {
-    toast.error("Login failed")
+    toast.error("Something went wrong.")
   }
-}
+})
 </script>
 
 <template>
   <div>
-    <Form :validation-schema="loginFormSchema" class="grid gap-4" @submit="onSubmit">
+    <form class="space-y-5" @submit="onSubmit">
       <FormField v-slot="{ componentField }" name="email">
         <FormItem>
           <FormLabel>Email</FormLabel>
@@ -83,6 +81,6 @@ async function onSubmit(values: any) {
         </FormItem>
       </FormField>
       <Button type="submit" class="w-full"> Login </Button>
-    </Form>
+    </form>
   </div>
 </template>
